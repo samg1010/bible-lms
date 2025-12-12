@@ -1,23 +1,17 @@
 // src/app/page.tsx
 import Link from 'next/link'
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase'  // Import the new helper
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic'  // Ensures fresh data on every request
 
 export default async function Home() {
-  // This is the correct way in Next.js 16
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies }
-  )
+  const supabase = createClient()  // Use the helper
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Get current user (magic-link supported)
+  const { data: { user } } = await supabase.auth.getUser()
 
+  // Fetch published courses
   const { data: courses } = await supabase
     .from('courses')
     .select('id, title, slug, image_url')
@@ -34,6 +28,7 @@ export default async function Home() {
           <p className="text-xl text-gray-700">Grow deeper in God's Word</p>
         </div>
 
+        {/* Logged-in vs Logged-out state */}
         {user ? (
           <div className="text-center mb-12">
             <p className="text-lg font-medium">
@@ -63,6 +58,7 @@ export default async function Home() {
           </div>
         )}
 
+        {/* Courses Grid */}
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {courses?.length === 0 ? (
             <p className="col-span-full text-center text-gray-600 text-lg">
