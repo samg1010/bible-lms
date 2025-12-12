@@ -1,5 +1,5 @@
 // src/components/SupabaseProvider.tsx
-'use client'
+'use client'  // THIS LINE IS THE FIX
 
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 import { SessionContextProvider } from '@supabase/auth-helpers-react'
