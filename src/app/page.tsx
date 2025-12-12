@@ -1,13 +1,21 @@
+// src/app/page.tsx
 import Link from 'next/link'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export default async function Home() {
   const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (name) => cookieStore.get(name)?.value } }
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
   )
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -18,7 +26,7 @@ export default async function Home() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Welcome to Bible LMS</h1>
-          <p className="text-xl text-gray-700">Grow deeper in God&apos;s Word</p>
+          <p className="text-xl text-gray-700">Grow deeper in God's Word</p>
         </div>
 
         {user ? (

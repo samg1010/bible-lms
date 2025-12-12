@@ -1,25 +1,33 @@
 // src/components/SupabaseProvider.tsx
-'use client'  // THIS LINE IS THE FIX
+'use client' // Client component for auth state
 
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
-import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { useEffect } from 'react'
 
 export default function SupabaseProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [supabaseClient] = useState(() =>
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      // Revalidate on auth change
+      window.location.reload()
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
-    <SessionContextProvider supabaseClient={supabaseClient}>
+    <div>
       {children}
-    </SessionContextProvider>
+    </div>
   )
 }
