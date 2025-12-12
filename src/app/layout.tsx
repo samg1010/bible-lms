@@ -1,4 +1,32 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { SupabaseProvider } from '@/components/SupabaseProvider'
+import { Toaster } from 'react-hot-toast'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Bible LMS – Study God\'s Word',
+  description: 'Complete Bible study platform with courses, memorization, and reading plans',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <SupabaseProvider>
+          {children}
+          <Toaster position="top-right" />
+        </SupabaseProvider>
+      </body>
+    </html>
+  )
+}import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
