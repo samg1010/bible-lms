@@ -1,12 +1,13 @@
 // src/app/page.tsx
 import Link from 'next/link'
 import Image from 'next/image'
-import { supabase } from '@/lib/supabase'  // Import the new helper
+import { supabase } from '@/lib/supabase'  // Already imported
 
 export const dynamic = 'force-dynamic'  // Ensures fresh data on every request
 
 export default async function Home() {
-  const supabase = createClient()  // Use the helper
+  // Remove this line:
+  // const supabase = createClient()  // ❌ DO NOT USE
 
   // Get current user (magic-link supported)
   const { data: { user } } = await supabase.auth.getUser()
@@ -18,7 +19,7 @@ export default async function Home() {
     .eq('published', true)
     .order('title')
 
-  return (
+   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
