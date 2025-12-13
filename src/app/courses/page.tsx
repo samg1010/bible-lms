@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'  // Ensures fresh data on every request
+
 export default async function Courses() {
   // Fetch courses from Supabase
   const { data: courses, error } = await supabase.from('courses').select('*')
