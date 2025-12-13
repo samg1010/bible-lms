@@ -1,7 +1,7 @@
 // src/app/page.tsx
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase'  // Import the new helper
+import { supabase } from '@/lib/supabase'  // Import the new helper
 
 export const dynamic = 'force-dynamic'  // Ensures fresh data on every request
 
