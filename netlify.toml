@@ -1,0 +1,21 @@
+# Root level of your project (same level as package.json)
+
+[build]
+  # Command to build your Next.js project
+  command = "npm run build"
+  
+  # Netlify's publish directory for Next.js SSR & static pages
+  publish = ".netlify/output"
+  
+  # Functions directory for serverless functions (SSR)
+  functions = ".netlify/functions"
+
+# Next.js plugin for Netlify
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Optional: Redirects (helpful if you want to handle fallback routes)
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/next"
+  status = 200

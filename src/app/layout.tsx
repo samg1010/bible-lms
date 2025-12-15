@@ -1,17 +1,17 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
+import { SessionProvider } from '@/hooks/useSession'
 
 export const metadata = {
   title: 'Bible LMS',
-  description: 'Bible LMS App',
+  description: 'Bible Learning Management System',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   )
 }

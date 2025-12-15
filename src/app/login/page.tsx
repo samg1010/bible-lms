@@ -12,41 +12,40 @@ export default function LoginPage() {
   const [checkingSession, setCheckingSession] = useState(true)
 
   useEffect(() => {
-    const handleSession = async () => {
-      // Check if user is already signed in or just arrived via magic link
-      const { data: { session } } = await supabase.auth.getSession()
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        router.replace('/dashboard')
+        router.replace(process.env.NEXT_PUBLIC_DASHBOARD_URL || '/dashboard')
       }
       setCheckingSession(false)
-    }
-
-    handleSession()
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        router.replace('/dashboard')
-      }
     })
-
-    return () => listener.subscription.unsubscribe()
   }, [router])
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setMessage('')
+ async function handleLogin(e: React.FormEvent) {
+  e.preventDefault()
+  setLoading(true)
+  setMessage('')
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
-    })
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+  const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : 'http://localhost:3000/dashboard'
 
-    setLoading(false)
-    setMessage(error ? error.message : 'Magic link sent! Check your email.')
+const { error } = await supabase.auth.signInWithOtp({
+  email,
+  options: {
+    emailRedirectTo: redirectTo,
+  },
+})
+
+  setLoading(false)
+  if (error) {
+    setMessage(`Error: ${error.message}`)
+  } else {
+    setMessage('Magic link sent! Check your email (including spam). A new link has been sent.')
   }
+}
 
-  if (checkingSession) return <p style={{ textAlign: 'center', marginTop: 40 }}>Loading…</p>
+  if (checkingSession) {
+    return <p style={{ textAlign: 'center', marginTop: 40 }}>Loading…</p>
+  }
 
   return (
     <div style={{ maxWidth: 400, margin: '80px auto' }}>
@@ -55,12 +54,16 @@ export default function LoginPage() {
         <input
           type="email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
           style={{ width: '100%', padding: 8, marginBottom: 10 }}
         />
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 8 }}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{ width: '100%', padding: 8 }}
+        >
           {loading ? 'Sending…' : 'Send Magic Link'}
         </button>
       </form>
