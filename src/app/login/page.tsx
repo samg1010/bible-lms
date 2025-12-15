@@ -28,7 +28,7 @@ export default function LoginPage() {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
   const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : 'http://localhost:3000/dashboard'
 
-onst { error } = await supabase.auth.signInWithOtp({
+const { error } = await supabase.auth.signInWithOtp({
   email: email.trim().toLowerCase(), // optional: good practice
   options: {
     emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
