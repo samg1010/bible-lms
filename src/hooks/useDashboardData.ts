@@ -1,4 +1,4 @@
-// hooks/useDashboardData.ts
+// src/hooks/useDashboardData.ts
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -34,13 +34,13 @@ export function useDashboardData(): DashboardData {
       const [{ data: docs, error: docsError }, { data: prog, error: progError }] =
         await Promise.all([
           supabase
-            .from<UserFile>('user_files')
+            .from('user_files')  // ← Remove <UserFile>
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false }),
 
           supabase
-            .from<UserProgress>('user_progress')
+            .from('user_progress')  // ← Remove generic here too if present
             .select('*')
             .eq('user_id', user.id),
         ])
@@ -60,8 +60,7 @@ export function useDashboardData(): DashboardData {
 
   useEffect(() => {
     fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]) // Re-fetch when user changes (login/logout)
+  }, [user])
 
   return {
     documents,
