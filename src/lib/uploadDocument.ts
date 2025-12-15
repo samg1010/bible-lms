@@ -24,15 +24,17 @@ export async function uploadDocument(file: File, userId: string): Promise<UserDo
     const fileUrl = urlData.publicUrl
 
     // Insert into user_documents table
-    const { data: document, error: insertError } = await supabase
-      .from<UserDocument>('user_documents')
-      .insert({
-        user_id: userId,
-        file_name: file.name,
-        file_url: fileUrl,
-      })
-      .select()
-      .single() // return inserted row
+   const { data: document, error: insertError } = await supabase
+  .from('user_documents')
+  .insert({
+    user_id: userId,
+    file_name: file.name,
+    file_path: filePath,
+    // ... other fields
+  })
+  .select()
+  // Optional: type the response properly
+  .single<UserDocument>()
 
     if (insertError) throw insertError
 
