@@ -1,9 +1,5 @@
 [build]
   command = "npm run build"
-  publish = ".next"
-
-[build.environment]
-  NEXT_PRIVATE_TARGET = "serverless"  # Optional but recommended for Netlify
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
