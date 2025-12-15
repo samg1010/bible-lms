@@ -1,7 +1,7 @@
 // src/app/page.tsx
 import Link from 'next/link'
 import Image from 'next/image'
-import { supabase } from '@/lib/supabase'  // Already imported
+import { supabase } from '@/lib/supabaseClient'  // Already imported
 
 export const dynamic = 'force-dynamic'  // Ensures fresh data on every request
 
