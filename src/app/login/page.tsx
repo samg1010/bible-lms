@@ -28,12 +28,12 @@ export default function LoginPage() {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
   const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : 'http://localhost:3000/dashboard'
 
-const { error } = await supabase.auth.signInWithOtp({
-  email,
+onst { error } = await supabase.auth.signInWithOtp({
+  email: email.trim().toLowerCase(), // optional: good practice
   options: {
-    emailRedirectTo: redirectTo,
+    emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
   },
-})
+});
 
   setLoading(false)
   if (error) {
