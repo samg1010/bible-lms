@@ -1,9 +1,15 @@
 // src/types/index.ts
-export type { UserDocument } from './UserDocument' // if in separate files
-// OR directly define and export here
+
 export interface UserDocument {
-  // your type definition
+  id: string;
+  user_id: string;
+  file_name: string;
+  file_path: string;
+  uploaded_at: string;
+  // Add any other fields that exist in your 'user_documents' table
+  // e.g., size?: number;
+  // mime_type?: string;
 }
 
-// Re-export other common types
-export * from './otherTypes'
+// You can add and export more types here later
+// export interface OtherType { ... }
