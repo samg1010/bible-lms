@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-
+export const dynamic = 'force-dynamic';
 export default function VerifyPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
