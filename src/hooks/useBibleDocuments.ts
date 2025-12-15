@@ -1,7 +1,8 @@
+// src/hooks/useBibleDocuments.ts
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient' // adjust if needed
+import { supabase } from '@/lib/supabaseClient'  // or supabaseClient as supabase
 
 export type BibleDocument = {
   id: string
@@ -18,16 +19,16 @@ export function useBibleDocuments() {
 
   useEffect(() => {
     async function fetchBibles() {
+      setLoading(true)
       const { data, error } = await supabase
-        .from<BibleDocument>('bible_documents')
+        .from('bible_documents')  // ← Remove the <BibleDocument>
         .select('*')
 
       if (error) {
         console.error('Error fetching Bible documents:', error)
         setDocuments([])
       } else {
-        // Add public URL for each
-        const withUrls = (data || []).map((doc) => ({
+        const withUrls = (data || []).map((doc: any) => ({
           ...doc,
           publicUrl: supabase.storage.from('bible-documents').getPublicUrl(doc.storage_path).data.publicUrl,
         }))
