@@ -3,12 +3,13 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
-  const type = searchParams.get('type') as 'signup' | 'magiclink' | 'recovery' | 'email' | null;
-  const next = searchParams.get('next') ?? '/dashboard';  // Redirect to dashboard after login
+  const type = searchParams.get('type') as 'signup' | 'email' | 'recovery' | null;
+  const next = searchParams.get('next') ?? '/dashboard'; // Your protected page
 
   const cookieStore = cookies();
 
@@ -21,29 +22,26 @@ export async function GET(request: Request) {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
         },
       },
     }
   );
 
   if (token_hash && type) {
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash,
+    const { error } = await supabase.auth.verifyOtp({
       type,
+      token_hash,
     });
 
-    if (error) {
-      console.error('Verify OTP error:', error);  // Check Netlify logs for this
-      return NextResponse.redirect(new URL('/auth/error?message=invalid_link', request.url));
+    if (!error) {
+      // Success – redirect to dashboard (session cookies are now set)
+      return NextResponse.redirect(new URL(next, request.url));
     }
-
-    // Success! Session is now set via cookies
-    return NextResponse.redirect(new URL(next, request.url));
   }
 
-  // No token → bad link
-  return NextResponse.redirect(new URL('/auth/error?message=no_token', request.url));
+  // Failed/invalid link – go to error page
+  return NextResponse.redirect(new URL('/auth/error', request.url));
 }
