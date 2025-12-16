@@ -3,24 +3,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import type { EmailOtpType } from '@supabase/supabase-js';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  let token_hash = requestUrl.searchParams.get('token_hash');
-  const type = requestUrl.searchParams.get('type') as 'email' | 'signup' | null;
+  const token_hash = requestUrl.searchParams.get('token_hash');
+  const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
   const next = requestUrl.searchParams.get('next') ?? '/dashboard';
 
-  console.log('Magic link accessed - raw token_hash:', token_hash);
+  console.log('Magic link accessed:', { token_hash_starts_with: token_hash?.substring(0, 10), type, next });
 
   if (!token_hash || !type) {
-    console.log('Missing token_hash or type');
     return NextResponse.redirect(new URL('/auth/error?message=missing_params', requestUrl));
-  }
-
-  // Critical: Strip "pkce_" prefix for PKCE magic links (2025 Supabase behavior)
-  if (token_hash.startsWith('pkce_')) {
-    token_hash = token_hash.substring(5); // Remove "pkce_"
-    console.log('Stripped pkce_ prefix - clean token_hash used');
   }
 
   const cookieStore = await cookies();
@@ -46,7 +40,7 @@ export async function GET(request: Request) {
     }
   );
 
-  const { data, error } = await supabase.auth.verifyOtp({
+  const { error } = await supabase.auth.verifyOtp({
     token_hash,
     type,
   });
@@ -56,6 +50,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/auth/error?message=invalid_token', requestUrl));
   }
 
-  console.log('Verify OTP SUCCESS - session set, redirecting to', next);
+  console.log('Verify OTP SUCCESS — redirecting to', next);
   return NextResponse.redirect(new URL(next, requestUrl));
 }
