@@ -3,17 +3,21 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import type { EmailOtpType } from '@supabase/supabase-js';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const token_hash = requestUrl.searchParams.get('token_hash');
-  const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
+  const type = requestUrl.searchParams.get('type') as 'email' | 'signup' | null;
   const next = requestUrl.searchParams.get('next') ?? '/dashboard';
 
-  console.log('Magic link accessed:', { token_hash_starts_with: token_hash?.substring(0, 10), type, next });
+  console.log('Magic link accessed', {
+    token_hash_prefix: token_hash?.substring(0, 10) || 'missing',
+    type,
+    next,
+  });
 
   if (!token_hash || !type) {
+    console.log('Missing token_hash or type');
     return NextResponse.redirect(new URL('/auth/error?message=missing_params', requestUrl));
   }
 
@@ -40,7 +44,7 @@ export async function GET(request: Request) {
     }
   );
 
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     token_hash,
     type,
   });
@@ -50,6 +54,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/auth/error?message=invalid_token', requestUrl));
   }
 
-  console.log('Verify OTP SUCCESS — redirecting to', next);
+  console.log('Verify OTP SUCCESS — session set, redirecting to', next);
   return NextResponse.redirect(new URL(next, requestUrl));
 }
