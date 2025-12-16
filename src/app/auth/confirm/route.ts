@@ -1,19 +1,20 @@
-// src/app/auth/confirm/route.ts (FINAL VERSION)
+// src/app/auth/confirm/route.ts
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import type { EmailOtpType } from '@supabase/supabase-js';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const token_hash = requestUrl.searchParams.get('token_hash');
-  const type = requestUrl.searchParams.get('type') as 'email' | 'signup' | 'recovery' | null;
+  const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
   const next = requestUrl.searchParams.get('next') ?? '/dashboard';
 
-  console.log('Magic link hit:', { token_hash: token_hash?.substring(0, 20) + '...', type, next });
+  console.log('Magic link accessed', { token_hash: token_hash ? 'present (pkce_...)' : 'missing', type, next });
 
   if (!token_hash || !type) {
-    console.log('Missing token_hash or type');
+    console.log('Missing parameters');
     return NextResponse.redirect(new URL('/auth/error?message=missing_params', requestUrl));
   }
 
@@ -29,11 +30,9 @@ export async function GET(request: Request) {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
           } catch (error) {
-            console.error('Cookie set error:', error);
+            console.error('Cookie setting error:', error);
           }
         },
       },
@@ -46,10 +45,10 @@ export async function GET(request: Request) {
   });
 
   if (error) {
-    console.error('Verify OTP FAILED:', error.message, error.status || '');
+    console.error('Verify OTP FAILED:', error.message, error);
     return NextResponse.redirect(new URL('/auth/error?message=invalid_token', requestUrl));
   }
 
-  console.log('Verify OTP SUCCESS — session set, redirecting to', next);
+  console.log('Verify OTP SUCCESS — redirecting to', next);
   return NextResponse.redirect(new URL(next, requestUrl));
 }
