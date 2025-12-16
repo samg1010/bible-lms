@@ -70,7 +70,7 @@ export function useUploadDocument(options?: { onSuccess?: () => void }): UseUplo
 
       // 3. Insert metadata into user_files table
       const { data: dbData, error: dbError } = await supabase
-        .from('user_files')
+        .from('user_documents')
         .insert({
           user_id: user.id,
           name: file.name,

@@ -34,7 +34,7 @@ export function useDashboardData(): DashboardData {
       const [{ data: docs, error: docsError }, { data: prog, error: progError }] =
         await Promise.all([
           supabase
-            .from('user_files')  // ← Remove <UserFile>
+            .from('user_documents')  // ← Remove <UserFile>
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false }),
