@@ -1,107 +1,90 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import UploadSection from './components/UploadSection'
-import PdfViewer from './components/PdfViewer'
-import BibleSection from './components/BibleSection'
-import DocumentList from './components/DocumentList'
-import { useDashboardData } from '@/hooks/useDashboardData'
-import { supabase } from '@/lib/supabaseClient' // adjust path if needed
-import { UserFile } from './types'
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import UploadSection from './components/UploadSection';
+import DocumentList from './components/DocumentList';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { UserDocument } from '@/types'; // adjust path if needed
 
 export default function DashboardPage() {
-  const { documents, progress, loading, error, refetch } = useDashboardData()
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [generatingUrlFor, setGeneratingUrlFor] = useState<string | null>(null)
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null)
-  const [viewerDocName, setViewerDocName] = useState<string | null>(null)
-  const [viewerLoading, setViewerLoading] = useState(false)
+  const { documents, loading: dataLoading, error, refresh } = useDashboardData();
 
-  const getSignedUrl = async (path: string): Promise<string | null> => {
-    const { data, error } = await supabase.storage
-      .from('user-files')
-      .createSignedUrl(path, 3600) // 1 hour expiry
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
 
-    if (error) {
-      console.error('Signed URL error:', error)
-      return null
-    }
-    return data.signedUrl
+    getUser();
+
+    // Listen for auth changes (e.g., after magic link login)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+      if (event === 'SIGNED_IN') {
+        refresh(); // Refresh data when signed in
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [refresh]);
+
+  if (loading || dataLoading) {
+    return <div className="p-8 text-center">Loading dashboard...</div>;
   }
 
-  // For personal documents
-  const openInDashboard = async (doc: UserFile) => {
-    setViewerLoading(true)
-    setViewerDocName(doc.name)
-    const url = await getSignedUrl(doc.url)
-    setViewerUrl(url)
-    setViewerLoading(false)
+  if (!user) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+        <p>You must be logged in to view the dashboard.</p>
+        <a href="/" className="text-blue-600 hover:underline">← Back to Home</a>
+      </div>
+    );
   }
-
-  // For shared Bible documents (public URLs – no signed URL needed)
-  const openBibleInDashboard = (url: string, name: string) => {
-    setViewerUrl(url)
-    setViewerDocName(name)
-    setViewerLoading(false)
-  }
-
-  const openInNewTab = async (path: string) => {
-    setGeneratingUrlFor(path)
-    const url = await getSignedUrl(path)
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer')
-    }
-    setGeneratingUrlFor(null)
-  }
-
-  const updateProgress = async (documentId: string, percentage: number) => {
-    const { error: upsertError } = await supabase
-      .from('user_progress')
-      .upsert({
-        user_id: documents.find(d => d.id === documentId)?.user_id,
-        document_id: documentId,
-        progress_percentage: percentage,
-        last_read_at: new Date().toISOString(),
-      })
-
-    if (upsertError) {
-      console.error('Progress update error:', upsertError)
-    } else {
-      refetch() // Refresh progress data
-    }
-  }
-
-  if (loading) return <p>Loading your dashboard…</p>
-  if (error) return <p>Error loading data: {error}</p>
 
   return (
-    <div style={{ maxWidth: 960, margin: '40px auto', padding: '0 20px' }}>
-      <h1 style={{ marginBottom: 40 }}>Bible LMS Dashboard</h1>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold text-gray-900">Bible LMS Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome back, {user.email}</p>
+        </div>
+      </header>
 
-      <UploadSection onUploadSuccess={refetch} />
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Upload Section */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6">Upload Document</h2>
+          <UploadSection onUploadSuccess={refresh} />
+        </section>
 
-      <PdfViewer
-        url={viewerUrl}
-        docName={viewerDocName}
-        onClose={() => {
-          setViewerUrl(null)
-          setViewerDocName(null)
-        }}
-        loading={viewerLoading}
-      />
+        {/* Document List */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Your Documents</h2>
+          {error && <p className="text-red-600 mb-4">{error}</p>}
+          <DocumentList documents={documents as UserDocument[]} onDeleteSuccess={refresh} />
+        </section>
+      </main>
 
-      <BibleSection onViewInDashboard={openBibleInDashboard} />
-
-      <h2 style={{ marginTop: 60 }}>Your Personal Documents ({documents.length})</h2>
-
-      <DocumentList
-        documents={documents}
-        progressData={progress}
-        onUpdateProgress={updateProgress}
-        onViewInDashboard={openInDashboard}
-        onOpenNewTab={openInNewTab}
-        generatingUrlFor={generatingUrlFor}
-      />
+      <footer className="text-center py-6 text-gray-500 text-sm">
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/';
+          }}
+          className="text-blue-600 hover:underline"
+        >
+          Sign Out
+        </button>
+      </footer>
     </div>
-  )
+  );
 }
