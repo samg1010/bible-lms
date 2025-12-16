@@ -10,16 +10,17 @@ export async function GET(request: Request) {
   const type = requestUrl.searchParams.get('type') as 'email' | 'signup' | null;
   const next = requestUrl.searchParams.get('next') ?? '/dashboard';
 
-  console.log('Magic link hit:', { raw_token_hash: token_hash, type, next });
+  console.log('Magic link accessed - raw token_hash:', token_hash);
 
   if (!token_hash || !type) {
+    console.log('Missing token_hash or type');
     return NextResponse.redirect(new URL('/auth/error?message=missing_params', requestUrl));
   }
 
-  // Strip "pkce_" prefix if present (required for current PKCE magic links)
+  // Critical: Strip "pkce_" prefix for PKCE magic links (2025 Supabase behavior)
   if (token_hash.startsWith('pkce_')) {
-    token_hash = token_hash.slice(5); // Remove first 5 characters
-    console.log('Stripped pkce_ prefix, using hash:', token_hash.substring(0, 20) + '...');
+    token_hash = token_hash.substring(5); // Remove "pkce_"
+    console.log('Stripped pkce_ prefix - clean token_hash used');
   }
 
   const cookieStore = await cookies();
@@ -45,16 +46,16 @@ export async function GET(request: Request) {
     }
   );
 
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     token_hash,
     type,
   });
 
   if (error) {
-    console.error('Verify OTP FAILED:', error.message);
+    console.error('Verify OTP FAILED:', error.message, error);
     return NextResponse.redirect(new URL('/auth/error?message=invalid_token', requestUrl));
   }
 
-  console.log('Verify OTP SUCCESS — redirecting to', next);
+  console.log('Verify OTP SUCCESS - session set, redirecting to', next);
   return NextResponse.redirect(new URL(next, requestUrl));
 }
