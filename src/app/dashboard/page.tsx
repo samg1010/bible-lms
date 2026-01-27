@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const { documents, loading: dataLoading, error, refresh } = useDashboardData();
+  const { documents, loading: dataLoading, error,} = useDashboardData();
 
   useEffect(() => {
     const getUser = async () => {
@@ -26,15 +26,15 @@ export default function DashboardPage() {
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
-      if (event === 'SIGNED_IN') {
+   //   if (event === 'SIGNED_IN') {
         refresh(); // Refresh data when signed in
       }
     });
 
-    return () => {
+   // return () => {
       listener.subscription.unsubscribe();
     };
-  }, [refresh]);
+ // }, [refresh]);
 
   if (loading || dataLoading) {
     return <div className="p-8 text-center">Loading dashboard...</div>;
@@ -63,14 +63,14 @@ export default function DashboardPage() {
         {/* Upload Section */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-6">Upload Document</h2>
-          <UploadSection onUploadSuccess={refresh} />
+         // <UploadSection onUploadSuccess={refresh} />
         </section>
 
         {/* Document List */}
         <section>
           <h2 className="text-2xl font-semibold mb-6">Your Documents</h2>
           {error && <p className="text-red-600 mb-4">{error}</p>}
-          <DocumentList documents={documents as UserDocument[]} onDeleteSuccess={refresh} />
+       //   <DocumentList documents={documents as UserDocument[]} onDeleteSuccess={refresh} />
         </section>
       </main>
 
